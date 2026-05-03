@@ -29,7 +29,7 @@ export default function AdminLogin() {
 
   const pressKey = (k: string) => {
     if (k === '⌫') { setPin(p => p.slice(0, -1)); return; }
-    if (pin.length < 6) setPin(p => p + k);
+    if (pin.length < 8) setPin(p => p + k);
   };
 
   return (

@@ -23,15 +23,16 @@ export default function AdminDashboard() {
   const [savedMsg, setSavedMsg] = useState('');
 
   const load = useCallback(async () => {
+    const bookingsRes = await fetch('/api/bookings');
+    if (bookingsRes.status === 401) { router.push('/admin/login'); return; }
     const [b, s, a, bl, st] = await Promise.all([
-      fetch('/api/bookings').then(r => r.ok ? r.json() : []),
+      bookingsRes.json(),
       fetch('/api/services').then(r => r.json()),
       fetch('/api/availability').then(r => r.json()),
       fetch('/api/blocked-dates').then(r => r.json()),
       fetch('/api/settings').then(r => r.json()),
     ]);
     if (Array.isArray(b)) setBookings(b);
-    else router.push('/admin/login');
     setServices(s);
     setAvailability(a);
     setBlockedDates(Array.isArray(bl) ? bl : []);
