@@ -57,7 +57,7 @@ export default function AdminLogin() {
         <form onSubmit={submit} className="space-y-5">
           {/* PIN dots display */}
           <div className="flex justify-center gap-3">
-            {Array.from({ length: Math.max(pin.length, 4) }).map((_, i) => (
+            {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className={`w-4 h-4 rounded-full transition-all ${
                 i < pin.length ? 'bg-[#D4A017] scale-110' : 'bg-white/15'
               }`} />
