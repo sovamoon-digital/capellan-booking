@@ -1,8 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-const FACEBOOK_URL = 'https://facebook.com/capellanauto';
-const INSTAGRAM_URL = 'https://instagram.com/capellanauto';
+const FACEBOOK_URL = 'https://www.facebook.com/capellanservice/';
+const INSTAGRAM_URL = 'https://www.instagram.com/capellanservicio/';
 const EMAIL = 'hello@capellanservicio.com';
 
 function IconFacebook() {
