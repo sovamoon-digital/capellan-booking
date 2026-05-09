@@ -68,3 +68,11 @@ insert into availability (day_of_week, is_open, open_time, close_time) values
   ('Sat', true,  '09:00', '14:00'),
   ('Sun', false, '09:00', '13:00')
 on conflict (day_of_week) do nothing;
+
+create table if not exists whatsapp_messages (
+  id uuid primary key default gen_random_uuid(),
+  from_number text not null,
+  message_body text not null,
+  status text default 'unread',
+  created_at timestamptz default now()
+);
