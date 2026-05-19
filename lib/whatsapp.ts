@@ -1,7 +1,6 @@
 import twilio from 'twilio';
 
 const TEMPLATES = {
-  cita_nueva:       'HX548d77cf937958a3e6135675617c5505',
   cita_confirmada:  'HXddf474f91eab63c4b39b4ffbe143d7e2',
   cita_cancelada:   'HXb3e617f8e2ea44a25a8c809a6da6b5bf',
   cita_recuerdo:    'HX82d333147c881b092856e5b7e77d8f7a',
@@ -25,7 +24,7 @@ async function send(to: string, contentSid: string, vars: Record<string, string>
   });
 }
 
-// Notify owner of a new booking
+// Notify owner of a new booking via SMS (no Meta template approval needed)
 export async function notifyOwnerWhatsApp(booking: {
   customerName: string;
   customerPhone: string;
@@ -35,13 +34,12 @@ export async function notifyOwnerWhatsApp(booking: {
   carInfo: string;
 }) {
   if (!ready()) return;
-  await send(process.env.OWNER_WHATSAPP_NUMBER!, TEMPLATES.cita_nueva, {
-    '1': booking.customerName,
-    '2': booking.customerPhone,
-    '3': booking.carInfo,
-    '4': booking.service,
-    '5': booking.date,
-    '6': booking.time,
+  const client = getClient();
+  const body = `Nueva Cita - Capellan Auto\n\nCliente: ${booking.customerName}\nTel: ${booking.customerPhone}\nVehiculo: ${booking.carInfo}\nServicio: ${booking.service}\nFecha: ${booking.date}\nHora: ${booking.time}`;
+  await client.messages.create({
+    from: process.env.TWILIO_SMS_FROM || process.env.TWILIO_WHATSAPP_FROM!,
+    to: process.env.OWNER_WHATSAPP_NUMBER!,
+    body,
   });
 }
 
