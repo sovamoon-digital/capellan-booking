@@ -36,9 +36,11 @@ export async function notifyOwnerWhatsApp(booking: {
   if (!ready()) return;
   const client = getClient();
   const body = `Nueva Cita - Capellan Auto\n\nCliente: ${booking.customerName}\nTel: ${booking.customerPhone}\nVehiculo: ${booking.carInfo}\nServicio: ${booking.service}\nFecha: ${booking.date}\nHora: ${booking.time}`;
+  // Strip whatsapp: prefix if SMS_FROM was copied from WhatsApp env var
+  const smsFrom = (process.env.TWILIO_SMS_FROM || process.env.TWILIO_WHATSAPP_FROM!).replace('whatsapp:', '');
   await client.messages.create({
-    from: process.env.TWILIO_SMS_FROM || process.env.TWILIO_WHATSAPP_FROM!,
-    to: process.env.OWNER_WHATSAPP_NUMBER!,
+    from: smsFrom,
+    to: process.env.OWNER_PHONE || process.env.OWNER_WHATSAPP_NUMBER!,
     body,
   });
 }
