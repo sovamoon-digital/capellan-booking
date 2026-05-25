@@ -39,11 +39,22 @@ export async function notifyOwnerWhatsApp(booking: {
   const client = getClient();
   const body = `Nueva Cita - Capellan Auto\n\nCliente: ${booking.customerName}\nTel: ${booking.customerPhone}\nVehiculo: ${booking.carInfo}\nServicio: ${booking.service}\nFecha: ${booking.date}\nHora: ${booking.time}`;
   const ownerNumber = process.env.OWNER_WHATSAPP_NUMBER || process.env.OWNER_PHONE!;
-  await client.messages.create({
-    from: process.env.TWILIO_WHATSAPP_FROM!,
-    to: 'whatsapp:' + ownerNumber.replace('whatsapp:', ''),
-    body,
-  });
+  try {
+    await client.messages.create({
+      from: process.env.TWILIO_WHATSAPP_FROM!,
+      to: 'whatsapp:' + ownerNumber.replace('whatsapp:', ''),
+      body,
+    });
+  } catch (e: unknown) {
+    // 63016 = freeform outside 24h window. Owner needs to message the
+    // business number to reopen it (his daily iOS Shortcut should do this).
+    // Alertable line — grep '[ALERT 63016]' in Vercel logs.
+    const code = (e as { code?: number })?.code;
+    if (code === 63016) {
+      console.error('[ALERT 63016] Owner 24h WhatsApp window closed — owner notification not delivered');
+    }
+    throw e;
+  }
 }
 
 // Confirm booking with customer
