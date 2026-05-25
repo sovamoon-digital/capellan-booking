@@ -24,7 +24,9 @@ async function send(to: string, contentSid: string, vars: Record<string, string>
   });
 }
 
-// Notify owner of a new booking via SMS (no Meta template approval needed)
+// Notify owner of a new booking via free-form WhatsApp.
+// Owner has already messaged the business number, keeping the 24h
+// customer-service window open — no Meta template approval needed.
 export async function notifyOwnerWhatsApp(booking: {
   customerName: string;
   customerPhone: string;
@@ -36,11 +38,10 @@ export async function notifyOwnerWhatsApp(booking: {
   if (!ready()) return;
   const client = getClient();
   const body = `Nueva Cita - Capellan Auto\n\nCliente: ${booking.customerName}\nTel: ${booking.customerPhone}\nVehiculo: ${booking.carInfo}\nServicio: ${booking.service}\nFecha: ${booking.date}\nHora: ${booking.time}`;
-  // Strip whatsapp: prefix if SMS_FROM was copied from WhatsApp env var
-  const smsFrom = (process.env.TWILIO_SMS_FROM || process.env.TWILIO_WHATSAPP_FROM!).replace('whatsapp:', '');
+  const ownerNumber = process.env.OWNER_WHATSAPP_NUMBER || process.env.OWNER_PHONE!;
   await client.messages.create({
-    from: smsFrom,
-    to: process.env.OWNER_PHONE || process.env.OWNER_WHATSAPP_NUMBER!,
+    from: process.env.TWILIO_WHATSAPP_FROM!,
+    to: 'whatsapp:' + ownerNumber.replace('whatsapp:', ''),
     body,
   });
 }
