@@ -44,7 +44,7 @@ export default function BookingSheet({ service, onClose }: Props) {
         </div>
         {/* Wizard */}
         <div className="px-5 py-6 pb-12">
-          <BookingWizard initialService={service} />
+          <BookingWizard initialService={service} onClose={onClose} />
         </div>
       </div>
     </div>

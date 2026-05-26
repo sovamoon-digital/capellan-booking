@@ -9,6 +9,7 @@ Status: ✅ Done · 🔄 In Progress · ⬜ Pending
 - ✅ Phone number auto-format (DR 809/829/849 → E.164 +1XXXXXXXXXX)
 - ✅ Local slot blocking — mock bookings now block slots during dev session
 - ✅ Admin login mobile-friendly with real logo
+- ✅ Rebook flow — "Reservar Otra Cita" now closes the sheet and returns to the service grid for a fresh pick; services list also fetched unconditionally so the in-place reset path is no longer broken.
 
 ---
 
@@ -22,6 +23,7 @@ Status: ✅ Done · 🔄 In Progress · ⬜ Pending
 
 ## Medium Priority (Better experience)
 
+- ⬜ Auto-reply on business WhatsApp number for incoming customer messages — free-form bounce like "Para hablar con un asesor, escríbenos al +1-XXX-XXX-XXXX. Este número solo confirma citas." Wired into `app/api/whatsapp/webhook/route.ts`. Sets expectation so customers don't get confused when owner responds from a personal number.
 - ⬜ Customer cancel/reschedule self-service — `/booking/[ref]` page, enter phone + reference to cancel
 - ⬜ Admin StatsBar — fix to show today's count, week revenue, pending count (currently likely zeros)
 - ⬜ Booking sheet loading state — show skeleton while availability/slots fetch on open

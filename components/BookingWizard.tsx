@@ -16,9 +16,9 @@ const STEPS = ['Servicio', 'Fecha y Hora', 'Tus Datos', 'Confirmar'];
 
 const emptyCustomer: CustomerData = { name: '', phone: '', email: '', car_make: '', car_model: '', car_year: '', notes: '' };
 
-interface Props { initialService?: Service; }
+interface Props { initialService?: Service; onClose?: () => void; }
 
-export default function BookingWizard({ initialService }: Props) {
+export default function BookingWizard({ initialService, onClose }: Props) {
   const [step, setStep] = useState(initialService ? 1 : 0);
   const [services, setServices] = useState<Service[]>([]);
   const [availability, setAvailability] = useState<AvailDay[]>([]);
@@ -34,10 +34,10 @@ export default function BookingWizard({ initialService }: Props) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!initialService) fetch('/api/services').then(r => r.json()).then(setServices);
+    fetch('/api/services').then(r => r.json()).then(setServices);
     fetch('/api/availability').then(r => r.json()).then(setAvailability);
     fetch('/api/blocked-dates').then(r => r.json()).then(setBlockedDates);
-  }, [initialService]);
+  }, []);
 
   useEffect(() => {
     if (!selectedDate || !selectedService) return;
@@ -151,7 +151,7 @@ export default function BookingWizard({ initialService }: Props) {
         <p className="text-white/40 text-xs mb-1">📱 Confirmación enviada por WhatsApp</p>
         <p className="text-white/25 text-xs mb-8">Guarda tu número de referencia para cambios o cancelaciones</p>
 
-        <button onClick={resetWizard}
+        <button onClick={onClose ?? resetWizard}
           className="px-8 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold transition-colors">
           Reservar Otra Cita
         </button>
