@@ -37,6 +37,10 @@ export default function SocialStudio() {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [lightbox, setLightbox] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editCaption, setEditCaption] = useState('');
+  const [editIso, setEditIso] = useState('');
 
   const load = useCallback(async () => {
     const res = await fetch('/api/social/posts');
@@ -102,6 +106,20 @@ export default function SocialStudio() {
     if (!confirm('¿Eliminar esta publicación?')) return;
     await fetch(`/api/social/posts/${id}`, { method: 'DELETE' });
     load();
+  };
+
+  const openEdit = (p: Post) => { setEditing(p.id); setEditCaption(p.caption || ''); setEditIso(''); };
+
+  const saveEdit = async (id: string) => {
+    const body: { caption: string; scheduled_at?: string } = { caption: editCaption };
+    if (editIso) body.scheduled_at = editIso;
+    const res = await fetch(`/api/social/posts/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) { const d = await res.json().catch(() => ({})); flash(d.error || 'Error al guardar'); return; }
+    setEditing(null); flash('Cambios guardados'); load();
   };
 
   const gold = '#D4A017';
@@ -220,24 +238,55 @@ export default function SocialStudio() {
             <div className="space-y-3">
               {posts.map((p) => {
                 const st = STATUS_STYLE[p.status] || STATUS_STYLE.draft;
+                const canEdit = p.status !== 'published' && p.status !== 'publishing';
                 return (
-                  <div key={p.id} className="flex gap-3 rounded-xl bg-[#222] border border-white/10 p-3">
-                    {p.media_urls?.[0] && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.media_urls[0]} alt="" className="w-16 h-16 rounded-lg object-cover border border-white/10 flex-shrink-0" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${st.cls}`}>{st.label}</span>
-                        {p.platforms?.map((pl) => (
-                          <span key={pl} className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-white/50">{pl === 'facebook' ? 'FB' : 'IG'}</span>
-                        ))}
-                        {p.scheduled_at && <span className="text-xs text-white/40">{formatDrLocal(p.scheduled_at)}</span>}
+                  <div key={p.id} className="rounded-xl bg-[#222] border border-white/10 p-3">
+                    <div className="flex gap-3">
+                      {p.media_urls?.[0] && (
+                        <button onClick={() => setLightbox(p.media_urls[0])} className="flex-shrink-0" title="Ver imagen completa">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={p.media_urls[0]} alt="" className="w-16 h-16 rounded-lg object-cover border border-white/10 hover:border-[#D4A017] transition-colors cursor-zoom-in" />
+                        </button>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${st.cls}`}>{st.label}</span>
+                          {p.platforms?.map((pl) => (
+                            <span key={pl} className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-white/50">{pl === 'facebook' ? 'FB' : 'IG'}</span>
+                          ))}
+                          {p.scheduled_at && <span className="text-xs text-white/40">{formatDrLocal(p.scheduled_at)}</span>}
+                        </div>
+                        <p className="text-white/70 text-sm whitespace-pre-line line-clamp-3">{p.caption || <span className="text-white/30 italic">sin texto</span>}</p>
+                        {p.error && <p className="text-red-400 text-xs mt-1 line-clamp-2">{p.error}</p>}
                       </div>
-                      <p className="text-white/70 text-sm truncate">{p.caption || <span className="text-white/30 italic">sin texto</span>}</p>
-                      {p.error && <p className="text-red-400 text-xs mt-1 truncate">{p.error}</p>}
+                      <div className="flex flex-col gap-2 flex-shrink-0">
+                        {canEdit && (
+                          <button onClick={() => (editing === p.id ? setEditing(null) : openEdit(p))}
+                            className="text-white/40 hover:text-[#D4A017] transition-colors text-sm" title="Editar texto">✎</button>
+                        )}
+                        <button onClick={() => del(p.id)} className="text-white/30 hover:text-[#C0200F] transition-colors text-sm" title="Eliminar">✕</button>
+                      </div>
                     </div>
-                    <button onClick={() => del(p.id)} className="text-white/30 hover:text-[#C0200F] transition-colors text-sm flex-shrink-0">✕</button>
+
+                    {editing === p.id && (
+                      <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
+                        <textarea value={editCaption} onChange={(e) => setEditCaption(e.target.value)} rows={6}
+                          className="w-full rounded-lg bg-[#1A1A1A] border border-white/15 text-white text-sm px-3 py-2 focus:border-[#D4A017] focus:outline-none resize-y" />
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-white/40 text-xs">Reprogramar (opcional):</span>
+                          <input type="datetime-local" onChange={(e) => setEditIso(e.target.value ? drDatetimeLocalToUtc(e.target.value) : '')}
+                            className="rounded-lg bg-[#1A1A1A] border border-white/15 text-white text-xs px-2 py-1.5 focus:border-[#D4A017] focus:outline-none" />
+                          {editIso && <span className="text-[#D4A017] text-xs">{formatDrLocal(editIso)}</span>}
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => saveEdit(p.id)}
+                            className="px-4 py-1.5 rounded-lg text-sm font-semibold bg-[#D4A017] text-[#1A1A1A] hover:bg-[#F0C040] transition-colors">Guardar</button>
+                          <button onClick={() => setEditing(null)}
+                            className="px-4 py-1.5 rounded-lg text-sm text-white/50 hover:text-white hover:bg-white/10 transition-colors">Cancelar</button>
+                        </div>
+                        <p className="text-white/30 text-xs">Edita el texto de la publicación. El texto sobre la imagen está fijado en la imagen.</p>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -245,6 +294,17 @@ export default function SocialStudio() {
           )}
         </div>
       </div>
+
+      {/* Full-image lightbox */}
+      {lightbox && (
+        <div onClick={() => setLightbox(null)}
+          className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 cursor-zoom-out">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={lightbox} alt="vista completa" className="max-w-full max-h-full rounded-lg shadow-2xl" />
+          <button onClick={() => setLightbox(null)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white text-xl flex items-center justify-center">✕</button>
+        </div>
+      )}
     </div>
   );
 }
