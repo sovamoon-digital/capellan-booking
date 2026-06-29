@@ -27,20 +27,20 @@ export async function renderWisdomPng(hook: string): Promise<Buffer> {
           style={{
             position: 'absolute',
             left: '150px',
-            top: '860px',
-            width: '1230px',
+            top: '1080px',
+            width: '1260px',
             display: 'flex',
             flexDirection: 'column',
           }}
         >
-          <div style={{ width: '190px', height: '16px', backgroundColor: '#C0200F', marginBottom: '44px' }} />
+          <div style={{ width: '230px', height: '20px', backgroundColor: '#C0200F', marginBottom: '52px' }} />
           <div
             style={{
-              fontSize: '122px',
+              fontSize: '162px',
               fontWeight: 700,
               color: '#1A1A1A',
-              lineHeight: 1.03,
-              letterSpacing: '-1px',
+              lineHeight: 1.0,
+              letterSpacing: '-2px',
               textTransform: 'uppercase',
             }}
           >
@@ -48,8 +48,8 @@ export async function renderWisdomPng(hook: string): Promise<Buffer> {
           </div>
           <div
             style={{
-              marginTop: '52px',
-              fontSize: '42px',
+              marginTop: '60px',
+              fontSize: '48px',
               fontWeight: 700,
               color: '#C0200F',
               letterSpacing: '3px',
