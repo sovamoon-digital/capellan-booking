@@ -1,0 +1,23 @@
+name: Social Auto-Post Scheduler
+
+# Fires the publisher endpoint every 15 minutes. The endpoint itself decides
+# what is "due" (status=scheduled AND scheduled_at <= now), so exact firing
+# time doesn't need to match the post time — it just needs to run often enough.
+#
+# Requires repo secret CRON_SECRET (Settings → Secrets and variables → Actions),
+# matching the CRON_SECRET env var set in Vercel.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # every 15 min (GitHub may delay a few min under load)
+  workflow_dispatch:          # allow manual runs from the Actions tab
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger social-publish
+        run: |
+          curl -fsS --max-time 60 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://capellanservicio.com/api/cron/social-publish"

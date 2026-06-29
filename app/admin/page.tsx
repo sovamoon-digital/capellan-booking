@@ -73,9 +73,14 @@ export default function AdminDashboard() {
             </h1>
             <p className="text-white/30 text-xs">Capellan Auto Solution Express</p>
           </div>
-          <button onClick={logout} className="text-xs text-white/30 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10">
-            Cerrar Sesión
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => router.push('/admin/social')} className="text-xs text-[#D4A017] hover:text-[#F0C040] transition-colors px-3 py-1.5 rounded-lg border border-[#D4A017]/30 hover:bg-[#D4A017]/10">
+              📣 Social
+            </button>
+            <button onClick={logout} className="text-xs text-white/30 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10">
+              Cerrar Sesión
+            </button>
+          </div>
         </div>
       </div>
 
