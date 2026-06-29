@@ -29,36 +29,36 @@ export async function renderWisdomPng(hook: string): Promise<Buffer> {
           style={{
             position: 'absolute',
             left: '110px',
-            top: '870px',
-            width: '1060px',
+            top: '1010px',
+            width: '1180px',
             backgroundColor: '#16181D',
-            borderRadius: '28px',
-            padding: '72px 64px',
+            borderRadius: '32px',
+            padding: '78px 72px',
             display: 'flex',
             flexDirection: 'column',
           }}
         >
-          <div style={{ width: '200px', height: '16px', backgroundColor: '#C0200F', marginBottom: '42px' }} />
+          <div style={{ width: '240px', height: '18px', backgroundColor: '#C0200F', marginBottom: '48px' }} />
           <div
             style={{
-              fontSize: '116px',
+              fontSize: '140px',
               fontWeight: 700,
               color: '#F5F5F5',
-              lineHeight: 1.03,
+              lineHeight: 1.02,
               letterSpacing: '-2px',
               textTransform: 'uppercase',
             }}
           >
             {hook}
           </div>
-          <div style={{ width: '100%', height: '3px', backgroundColor: '#2A2D34', marginTop: '58px', marginBottom: '40px' }} />
-          <div style={{ fontSize: '46px', fontWeight: 700, color: '#D4A017', letterSpacing: '1px' }}>
+          <div style={{ width: '100%', height: '3px', backgroundColor: '#2A2D34', marginTop: '62px', marginBottom: '44px' }} />
+          <div style={{ fontSize: '52px', fontWeight: 700, color: '#D4A017', letterSpacing: '1px' }}>
             @capellanservicio
           </div>
           <div
             style={{
-              marginTop: '10px',
-              fontSize: '34px',
+              marginTop: '12px',
+              fontSize: '38px',
               fontWeight: 700,
               color: '#A0AEC0',
               letterSpacing: '2px',
