@@ -23,54 +23,49 @@ export async function renderWisdomPng(hook: string): Promise<Buffer> {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={templateUrl} width={2250} height={2250} style={{ position: 'absolute', top: 0, left: 0 }} />
         {/* Text in the clean white zone: left/center, below the logo, beside the mascot */}
-        {/* Dark left panel — hook at top, brand handle + city pinned to its bottom.
-            Sits left of the mascot so he stays clean on the white at right. */}
+        {/* Compact dark card — hugs its content (no empty void) and stays narrow
+            so its right edge clears the mascot on the right. */}
         <div
           style={{
             position: 'absolute',
             left: '110px',
-            top: '800px',
-            width: '1300px',
-            height: '1380px',
+            top: '870px',
+            width: '1060px',
             backgroundColor: '#16181D',
-            borderRadius: '32px',
-            padding: '80px 68px',
+            borderRadius: '28px',
+            padding: '72px 64px',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'space-between',
           }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ width: '230px', height: '18px', backgroundColor: '#C0200F', marginBottom: '48px' }} />
-            <div
-              style={{
-                fontSize: '132px',
-                fontWeight: 700,
-                color: '#F5F5F5',
-                lineHeight: 1.0,
-                letterSpacing: '-2px',
-                textTransform: 'uppercase',
-              }}
-            >
-              {hook}
-            </div>
+          <div style={{ width: '200px', height: '16px', backgroundColor: '#C0200F', marginBottom: '42px' }} />
+          <div
+            style={{
+              fontSize: '116px',
+              fontWeight: 700,
+              color: '#F5F5F5',
+              lineHeight: 1.03,
+              letterSpacing: '-2px',
+              textTransform: 'uppercase',
+            }}
+          >
+            {hook}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: '54px', fontWeight: 700, color: '#D4A017', letterSpacing: '1px' }}>
-              @capellanservicio
-            </div>
-            <div
-              style={{
-                marginTop: '12px',
-                fontSize: '40px',
-                fontWeight: 700,
-                color: '#A0AEC0',
-                letterSpacing: '2px',
-                textTransform: 'uppercase',
-              }}
-            >
-              Bonao · República Dominicana
-            </div>
+          <div style={{ width: '100%', height: '3px', backgroundColor: '#2A2D34', marginTop: '58px', marginBottom: '40px' }} />
+          <div style={{ fontSize: '46px', fontWeight: 700, color: '#D4A017', letterSpacing: '1px' }}>
+            @capellanservicio
+          </div>
+          <div
+            style={{
+              marginTop: '10px',
+              fontSize: '34px',
+              fontWeight: 700,
+              color: '#A0AEC0',
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+            }}
+          >
+            Bonao · República Dominicana
           </div>
         </div>
       </div>
