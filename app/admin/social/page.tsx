@@ -41,6 +41,8 @@ export default function SocialStudio() {
   const [editing, setEditing] = useState<string | null>(null);
   const [editCaption, setEditCaption] = useState('');
   const [editIso, setEditIso] = useState('');
+  const [editHook, setEditHook] = useState('');
+  const [regenerating, setRegenerating] = useState(false);
 
   const load = useCallback(async () => {
     const res = await fetch('/api/social/posts');
@@ -108,7 +110,21 @@ export default function SocialStudio() {
     load();
   };
 
-  const openEdit = (p: Post) => { setEditing(p.id); setEditCaption(p.caption || ''); setEditIso(''); };
+  const openEdit = (p: Post) => { setEditing(p.id); setEditCaption(p.caption || ''); setEditIso(''); setEditHook(''); };
+
+  const regenImage = async (id: string) => {
+    if (!editHook.trim()) { flash('Escribe el texto para la imagen'); return; }
+    setRegenerating(true);
+    const res = await fetch('/api/social/regenerate-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, hook: editHook.trim() }),
+    });
+    const d = await res.json().catch(() => ({}));
+    setRegenerating(false);
+    if (!res.ok) { flash(d.error || 'Error al regenerar'); return; }
+    flash('Imagen regenerada'); setEditHook(''); load();
+  };
 
   const saveEdit = async (id: string) => {
     const body: { caption: string; scheduled_at?: string } = { caption: editCaption };
@@ -284,7 +300,19 @@ export default function SocialStudio() {
                           <button onClick={() => setEditing(null)}
                             className="px-4 py-1.5 rounded-lg text-sm text-white/50 hover:text-white hover:bg-white/10 transition-colors">Cancelar</button>
                         </div>
-                        <p className="text-white/30 text-xs">Edita el texto de la publicación. El texto sobre la imagen está fijado en la imagen.</p>
+
+                        <div className="pt-2 mt-1 border-t border-white/10">
+                          <p className="text-white/40 text-xs mb-2">Cambiar el texto sobre la imagen (vuelve a generarla):</p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <input value={editHook} onChange={(e) => setEditHook(e.target.value)}
+                              placeholder="Nuevo texto sobre la imagen (máx 9 palabras)"
+                              className="flex-1 min-w-[200px] rounded-lg bg-[#1A1A1A] border border-white/15 text-white text-xs px-2 py-1.5 focus:border-[#D4A017] focus:outline-none" />
+                            <button onClick={() => regenImage(p.id)} disabled={regenerating}
+                              className="px-3 py-1.5 rounded-lg text-xs border border-[#D4A017]/40 text-[#D4A017] hover:bg-[#D4A017]/10 transition-colors disabled:opacity-50">
+                              {regenerating ? 'Regenerando…' : '🖼 Regenerar imagen'}
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
