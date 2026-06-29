@@ -51,17 +51,35 @@ async function graphPost(path: string, params: Record<string, string>): Promise<
   return json;
 }
 
+/**
+ * Resolve a Page access token from the configured token. Publishing to a Page
+ * requires a PAGE token — a user/System-User token returns the legacy
+ * "(#200) publish_actions ... deprecated" error. Querying the page's
+ * `access_token` field with a managing user/System-User token returns the
+ * page-specific token; if the configured token is already a page token this
+ * call may omit it, so we fall back to the configured token.
+ */
+async function getPageAccessToken(cfg: MetaConfig): Promise<string> {
+  try {
+    const r = await graphGet(`${cfg.pageId}`, { fields: 'access_token', access_token: cfg.token });
+    return r.access_token || cfg.token;
+  } catch {
+    return cfg.token;
+  }
+}
+
 /** Post a single photo to the Facebook Page. Returns the post/photo id. */
 export async function postPhotoToFacebook(
   cfg: MetaConfig,
   imageUrl: string,
   caption: string
 ): Promise<string> {
+  const pageToken = await getPageAccessToken(cfg);
   const json = await graphPost(`${cfg.pageId}/photos`, {
     url: imageUrl,
     caption: caption || '',
     published: 'true',
-    access_token: cfg.token,
+    access_token: pageToken,
   });
   return json.post_id || json.id;
 }
