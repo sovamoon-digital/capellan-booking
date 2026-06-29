@@ -30,9 +30,10 @@ export async function generateWisdom(
   }
 
   const system =
-    'Eres el community manager de "Capellán Auto Solution Express", un taller mecánico de confianza en Bonao, ' +
-    'República Dominicana. Escribes en español dominicano, cercano y profesional. Combinas consejos prácticos de ' +
-    'mantenimiento de autos con el mensaje de marca: servicio honesto, trabajo certificado, "tu auto en buenas manos". ' +
+    'Eres el community manager de "Capellán Auto Solution Express", un taller mecánico de confianza con sede en Bonao ' +
+    'que ofrece servicio en todo el corredor Santiago–Santo Domingo y en toda la República Dominicana. Escribes en ' +
+    'español dominicano, cercano y profesional. Combinas consejos prácticos de mantenimiento de autos con el mensaje de ' +
+    'marca: servicio honesto, trabajo certificado, amplia cobertura, "tu auto en buenas manos". ' +
     'Nunca inventes precios, promociones, enlaces ni servicios que no se te hayan indicado.';
 
   const user =
@@ -45,8 +46,10 @@ export async function generateWisdom(
     'un consejo imperativo, una advertencia, un "sabías que…", un beneficio. NO personifiques las piezas del auto ' +
     '("los frenos hablan", "las gomas hablan", etc.) ni repitas la misma fórmula o estructura de ganchos recientes.\n' +
     '- "caption": 1 a 3 oraciones para el texto de la publicación, tono cálido y profesional, máximo 1 emoji. ' +
-    'Termina con una invitación suave a visitar o reservar en Capellán (sin inventar enlaces ni precios).\n' +
-    '- "hashtags": de 4 a 6 hashtags relevantes en español (autos, mantenimiento, Bonao/RD, la marca), cada uno comenzando con #.' +
+    'Termina con una invitación suave a contactar o reservar con Capellán (sin inventar enlaces ni precios). ' +
+    'NO limites la cobertura a una sola ciudad: cuando menciones ubicación o disponibilidad, refleja que dan servicio en ' +
+    'Santiago, Santo Domingo y toda la República Dominicana.\n' +
+    '- "hashtags": de 4 a 6 hashtags relevantes en español (autos, mantenimiento, RD, Santiago/Santo Domingo, la marca), cada uno comenzando con #.' +
     avoid;
 
   const res = await fetch(ANTHROPIC_URL, {

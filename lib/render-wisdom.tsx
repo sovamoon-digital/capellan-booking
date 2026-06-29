@@ -58,14 +58,14 @@ export async function renderWisdomPng(hook: string): Promise<Buffer> {
           <div
             style={{
               marginTop: '12px',
-              fontSize: '38px',
+              fontSize: '34px',
               fontWeight: 700,
               color: '#A0AEC0',
-              letterSpacing: '2px',
+              letterSpacing: '1px',
               textTransform: 'uppercase',
             }}
           >
-            Bonao · República Dominicana
+            Bonao · Santiago · Santo Domingo · RD
           </div>
         </div>
       </div>
