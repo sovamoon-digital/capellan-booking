@@ -1,0 +1,21 @@
+name: Social Wisdom Generator
+
+# Generates one auto-care "word of wisdom" post Mon/Wed/Fri and schedules it
+# at the next best slot. The social-cron.yml publisher then posts it to FB + IG.
+#
+# Requires repo secret CRON_SECRET (same value as Vercel + the publisher workflow).
+
+on:
+  schedule:
+    - cron: '0 13 * * 1,3,5'   # Mon/Wed/Fri 13:00 UTC = 9:00 AM in Bonao (AST, UTC-4)
+  workflow_dispatch:           # allow manual runs from the Actions tab
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate wisdom post
+        run: |
+          curl -fsS --max-time 120 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://capellanservicio.com/api/cron/social-generate"
