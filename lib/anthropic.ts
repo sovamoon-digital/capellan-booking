@@ -40,7 +40,10 @@ export async function generateWisdom(
     'cuidado del auto con la confianza de la marca.\n\n' +
     'Devuelve SOLO un objeto JSON válido, sin texto adicional, con esta forma exacta:\n' +
     '{"hook": "...", "caption": "...", "hashtags": ["#...", "#..."]}\n\n' +
-    '- "hook": frase corta y potente para mostrar SOBRE la imagen. Máximo 9 palabras. Sin emojis, sin hashtags, sin comillas.\n' +
+    '- "hook": frase corta y potente para mostrar SOBRE la imagen. Máximo 9 palabras. Sin emojis, sin hashtags, sin comillas. ' +
+    'VARÍA la estructura cada vez — alterna entre estilos distintos: una pregunta directa, un dato o cifra concreta, ' +
+    'un consejo imperativo, una advertencia, un "sabías que…", un beneficio. NO personifiques las piezas del auto ' +
+    '("los frenos hablan", "las gomas hablan", etc.) ni repitas la misma fórmula o estructura de ganchos recientes.\n' +
     '- "caption": 1 a 3 oraciones para el texto de la publicación, tono cálido y profesional, máximo 1 emoji. ' +
     'Termina con una invitación suave a visitar o reservar en Capellán (sin inventar enlaces ni precios).\n' +
     '- "hashtags": de 4 a 6 hashtags relevantes en español (autos, mantenimiento, Bonao/RD, la marca), cada uno comenzando con #.' +
