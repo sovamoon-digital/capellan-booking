@@ -12,7 +12,7 @@ The feature lets an admin queue image posts and have them published automaticall
 
 1. Admin opens **`/admin/social`** (Estudio Social), uploads an image, writes the caption, picks Facebook and/or Instagram, and chooses a time (manual or via the **"Próximo mejor horario"** suggestions).
 2. The post is saved to the `social_posts` table with `status = scheduled` and a `scheduled_at` timestamp (stored in UTC). The image lives in the public **`social-media`** Supabase Storage bucket.
-3. An external cron (**GitHub Actions**, every 15 min) calls **`GET /api/cron/social-publish`** with a bearer token.
+3. An external cron (**cron-job.org**, every 15 min) calls **`GET /api/cron/social-publish`** with a bearer token.
 4. The endpoint finds posts where `status = scheduled` AND `scheduled_at <= now`, publishes each via the **Meta Graph API**, and flips the row to `published` (or `failed`, with the error stored).
 
 **v1 scope:** images only, **one image per post** (the publisher uses `media_urls[0]`). No video/carousel yet.
@@ -29,7 +29,8 @@ The feature lets an admin queue image posts and have them published automaticall
 | `lib/meta.ts` | Graph API calls (FB photo + IG container→publish) |
 | `lib/schedule.ts` | Best-time slot logic (DR timezone) |
 | `supabase-social.sql` | DB table + Storage bucket |
-| `.github/workflows/social-cron.yml` | The every-15-min trigger |
+| `app/api/cron/social-generate/route.ts` | Auto-generates a "wisdom" post (Tue/Fri) |
+| `.github/workflows/social-*.yml` | Manual-run backups only (schedule lives on cron-job.org, §8) |
 
 ---
 
@@ -170,30 +171,87 @@ Verify in Supabase → **Storage** that `social-media` shows as **Public**.
 
 ---
 
-## 8. External Cron Trigger
+## 8. External Cron Trigger (cron-job.org)
 
-The publisher must be hit on a schedule. We use **GitHub Actions**: `.github/workflows/social-cron.yml`.
+Two endpoints must be hit on a schedule. Both run on **[cron-job.org](https://cron-job.org)** (free).
 
-```yaml
-on:
-  schedule:
-    - cron: '*/15 * * * *'   # every 15 min
-  workflow_dispatch:          # manual run from the Actions tab
-# curls https://capellanservicio.com/api/cron/social-publish
-# with Authorization: Bearer ${{ secrets.CRON_SECRET }}
+| Job | URL | Schedule (America/Santo_Domingo) |
+|---|---|---|
+| **Capellán – Publish** | `https://capellanservicio.com/api/cron/social-publish` | Every 15 minutes |
+| **Capellán – Generate** | `https://capellanservicio.com/api/cron/social-generate` | **Tuesday + Friday, 9:00 AM** |
+
+> **Why not GitHub Actions:** GitHub silently disables scheduled workflows after **60 days without a commit**. That is what stopped auto-posting on **Aug 26, 2026**: the last commit was Jun 29, and both workflows were turned off after Aug 28. The `.github/workflows/social-*.yml` files are kept for **manual runs only** (Actions tab → Run workflow). **Do not re-add `schedule:` to them**, or GitHub and cron-job.org will both generate posts.
+
+### 8a. Before you start: clear stuck posts
+
+Any post still `scheduled` with a **past** date gets published on the **first publisher run**. After any outage, check for these in the Supabase SQL editor **before** enabling the jobs:
+
+```sql
+select id, caption, scheduled_at from social_posts
+where status = 'scheduled' and scheduled_at < now()
+order by scheduled_at;
 ```
 
-**Setup:**
+Then either delete each one or move it to a future slot (times are UTC; DR = UTC-4):
 
-1. In the GitHub repo → **Settings → Secrets and variables → Actions → New repository secret**.
-2. Name: **`CRON_SECRET`**, value: the **same** secret set in Vercel (§6).
-3. Done — the workflow runs every 15 minutes once it's on the default branch. You can also trigger it manually from the **Actions** tab (**Run workflow**).
+```sql
+delete from social_posts where id = '<id>';
+-- or
+update social_posts set scheduled_at = '<YYYY-MM-DD>T23:00:00Z' where id = '<id>';  -- 7:00 PM DR
+```
+
+Pick the **7:00 PM** slot (`T23:00:00Z`) on generator days (Tue/Fri). The generator already takes **11:00 AM** on those days, and two posts in the same slot look like spam.
+
+> **Oct 2026 recovery (done):** the stuck Aug 28 clutch post (`d49bd0d2-b4a1-4397-92b7-860424d9b47c`, "Un embrague que patina…") was rescheduled to **Tue Oct 27, 7:00 PM DR** (`2026-10-27T23:00:00Z`). The first Tuesday back has two posts: the new generated one at 11:00 AM and this one at 7:00 PM.
+
+### 8b. Create the account
+
+1. Sign up at **cron-job.org** with the Sovamoon ops email, so failure alerts go somewhere someone reads.
+2. **Settings → Timezone** → **America/Santo_Domingo**.
+
+### 8c. Job 1: Publisher
+
+**Create cronjob**:
+
+1. **Common** tab:
+   - Title: `Capellán – Publish`
+   - URL: `https://capellanservicio.com/api/cron/social-publish`
+   - Enable job: **on**
+   - Execution schedule: **Every 15 minutes**
+   - Notify me: on **failure**, and **when the job is disabled automatically**
+2. **Advanced** tab:
+   - Request method: **GET**
+   - Headers → **Add**: key `Authorization`, value `Bearer <CRON_SECRET>`. Use the same value as Vercel (§6), and keep the space after `Bearer`.
+   - Timezone: **America/Santo_Domingo**
+   - Timeout: the maximum allowed (30s on the free plan)
+3. **Create**, then use **Test run**. Expect HTTP 200 with `{"published":0}` (or `published: N` if something was due).
+
+### 8d. Job 2: Generator (Tue/Fri)
+
+**Create cronjob**:
+
+1. **Common** tab:
+   - Title: `Capellán – Generate`
+   - URL: `https://capellanservicio.com/api/cron/social-generate`
+   - Execution schedule: **Custom**. Days of week: **Tuesday, Friday**. Hours: **9**. Minutes: **0**. Days of month / months: **every**.
+     (Crontab equivalent: `0 9 * * 2,5` in America/Santo_Domingo, or `0 13 * * 2,5` in UTC.)
+   - Notify me: on **failure**, and **when disabled**
+2. **Advanced** tab: same **GET**, same `Authorization: Bearer <CRON_SECRET>` header, same timezone.
+3. **Create**. **Don't Test run this one** unless you want an extra post. Each run creates and schedules a real post.
+
+Each 9:00 AM run schedules its post at the next best slot (§11), which is normally **11:00 AM the same day**. The publisher picks it up within 15 minutes after that.
+
+### 8e. Verify
+
+- After a day, open each job → **History**. Publisher runs should be **200** every 15 min.
+- After the first Tuesday: in Supabase, a new `social_posts` row should go `scheduled` → `published`, with both `fb_post_id` and `ig_post_id` set.
 
 **Notes:**
 
-- The endpoint decides what's "due," so the cron just needs to run *often enough* — exact firing time doesn't need to match the post time.
-- **GitHub scheduled runs can be delayed a few minutes** under platform load. Posts may go out a few minutes after their slot — acceptable for this use case.
-- **Alternative:** [cron-job.org](https://cron-job.org) (free) — create a job hitting the same URL every 15 min with an `Authorization: Bearer <CRON_SECRET>` header. Use this if you'd rather not rely on GitHub Actions timing.
+- The publisher decides what's "due," so it only needs to run *often enough*. Exact firing time doesn't matter.
+- **Timeouts:** the free plan cuts the HTTP request off at 30s. The publisher normally takes under 15s, but a run that's polling an IG container can take longer. If History shows a timeout, look at the row in Supabase before assuming it failed: Vercel usually finishes the function even after cron-job.org disconnects.
+- **Auto-disable:** cron-job.org disables a job after many consecutive failures (e.g. `CRON_SECRET` rotated in Vercel but not here → 401s). That's why the "when disabled" notification matters. **If you rotate `CRON_SECRET`, update both job headers.**
+- **Supabase free plan pauses the database** after about a week without activity. The publisher's 15-min database queries are what keep it awake. In Oct 2026 the project was found paused after the GitHub crons died, and the site was serving the hardcoded backup services list (ids `s1`–`s8`) with bookings failing. If the publisher job ever stops, expect the database to pause about a week later. Fix: Supabase dashboard → **Resume project**. Permanent fix: upgrade the project to **Supabase Pro**.
 
 ---
 
@@ -230,7 +288,7 @@ curl -i -H "Authorization: Bearer <CRON_SECRET>" \
 | IG publish rejected — aspect ratio | IG accepts **4:5 to 1.91:1** | Crop the image to a supported ratio before uploading |
 | IG publish rejected — media | Image must be **JPEG**, **< 8 MB**, and **reachable by Meta over the public URL** | Use JPEG under 8 MB; confirm the `social-media` bucket is **public** (§7) |
 | `media_publish` fails right after container create | Publishing **too soon** before container is ready | For images this is usually instant; if it recurs, the media URL may be unreachable — re-check the public URL |
-| Cron never fires | Missing GitHub secret or workflow not on default branch | Add **`CRON_SECRET`** repo secret (§8); merge the workflow to the deployed branch; test via **Run workflow** |
+| Posts stop going out / cron never fires | cron-job.org job disabled (repeated failures) or wrong `Authorization` header (401) | Check job **History** on cron-job.org; fix the header to match Vercel's `CRON_SECRET`; re-enable the job (§8) |
 | Post stuck in `publishing` | A run claimed it but crashed mid-publish | Inspect the `error`/logs; manually reset the row's `status` to `scheduled` to retry |
 
 ---

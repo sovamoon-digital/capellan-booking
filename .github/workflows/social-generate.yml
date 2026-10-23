@@ -1,14 +1,17 @@
 name: Social Wisdom Generator
 
-# Generates one auto-care "word of wisdom" post Mon/Wed/Fri and schedules it
-# at the next best slot. The social-cron.yml publisher then posts it to FB + IG.
+# Generates one auto-care "word of wisdom" post and schedules it at the next
+# best slot. The social-cron.yml publisher then posts it to FB + IG.
 #
-# Requires repo secret CRON_SECRET (same value as Vercel + the publisher workflow).
+# MANUAL ONLY. The Tue/Fri schedule runs on cron-job.org (see SOCIAL-SETUP.md §8).
+# GitHub disables scheduled workflows after 60 days without a commit, which
+# stopped auto-posting in Aug 2026. Do NOT re-add a `schedule:` trigger here,
+# or cron-job.org and GitHub will both generate a post on the same day.
+#
+# Requires repo secret CRON_SECRET (same value as Vercel).
 
 on:
-  schedule:
-    - cron: '0 13 * * 1,3,5'   # Mon/Wed/Fri 13:00 UTC = 9:00 AM in Bonao (AST, UTC-4)
-  workflow_dispatch:           # allow manual runs from the Actions tab
+  workflow_dispatch:           # manual runs from the Actions tab
 
 jobs:
   generate:

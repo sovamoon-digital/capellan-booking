@@ -11,7 +11,7 @@ export const maxDuration = 60; // Claude call + og render + sharp convert + uplo
 const BUCKET = 'social-media';
 
 // GET — generate one "word of wisdom" post and schedule it at the next best slot.
-// Fired Mon/Wed/Fri by an external cron (Bearer CRON_SECRET). The publisher cron
+// Fired Tue/Fri by cron-job.org (Bearer CRON_SECRET). The publisher cron
 // then posts it to FB + IG. Fully automatic — no human step.
 export async function GET(req: NextRequest) {
   const auth = req.headers.get('authorization');

@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 export const maxDuration = 60; // headroom for IG container polling + multiple posts
 
 // GET — publish all posts that are due. Fired every ~15 min by an external
-// cron (GitHub Actions / cron-job.org) with the CRON_SECRET bearer token.
+// cron (cron-job.org) with the CRON_SECRET bearer token.
 export async function GET(req: NextRequest) {
   const auth = req.headers.get('authorization');
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
