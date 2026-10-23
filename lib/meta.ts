@@ -68,6 +68,29 @@ async function getPageAccessToken(cfg: MetaConfig): Promise<string> {
   }
 }
 
+/**
+ * Check the configured token for the health monitor. A live Page lookup proves
+ * the token works today; debug_token reports when it stops working (0 = never).
+ * Meta tracks two expiries — the token itself and its data-access window — so
+ * we return whichever comes first.
+ */
+export async function getTokenStatus(
+  cfg: MetaConfig
+): Promise<{ valid: boolean; expiresAt: Date | null; error?: string }> {
+  try {
+    await graphGet(cfg.pageId, { fields: 'id', access_token: cfg.token });
+  } catch (e: any) {
+    return { valid: false, expiresAt: null, error: e.message };
+  }
+  try {
+    const { data } = await graphGet('debug_token', { input_token: cfg.token, access_token: cfg.token });
+    const times = [data?.expires_at, data?.data_access_expires_at].filter((t) => t && t > 0);
+    return { valid: true, expiresAt: times.length ? new Date(Math.min(...times) * 1000) : null };
+  } catch {
+    return { valid: true, expiresAt: null }; // works now; expiry unknown
+  }
+}
+
 /** Post a single photo to the Facebook Page. Returns the post/photo id. */
 export async function postPhotoToFacebook(
   cfg: MetaConfig,

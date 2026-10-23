@@ -173,12 +173,13 @@ Verify in Supabase → **Storage** that `social-media` shows as **Public**.
 
 ## 8. External Cron Trigger (cron-job.org)
 
-Two endpoints must be hit on a schedule. Both run on **[cron-job.org](https://cron-job.org)** (free).
+Three endpoints run on a schedule, all on **[cron-job.org](https://cron-job.org)** (free).
 
 | Job | URL | Schedule (America/Santo_Domingo) |
 |---|---|---|
 | **Capellán – Publish** | `https://capellanservicio.com/api/cron/social-publish` | Every 15 minutes |
 | **Capellán – Generate** | `https://capellanservicio.com/api/cron/social-generate` | **Tuesday + Friday, 9:00 AM** |
+| **Capellán – Health** | `https://capellanservicio.com/api/cron/health` | Daily, 8:00 PM (§8f) |
 
 > **Why not GitHub Actions:** GitHub silently disables scheduled workflows after **60 days without a commit**. That is what stopped auto-posting on **Aug 26, 2026**: the last commit was Jun 29, and both workflows were turned off after Aug 28. The `.github/workflows/social-*.yml` files are kept for **manual runs only** (Actions tab → Run workflow). **Do not re-add `schedule:` to them**, or GitHub and cron-job.org will both generate posts.
 
@@ -245,6 +246,34 @@ Each 9:00 AM run schedules its post at the next best slot (§11), which is norma
 
 - After a day, open each job → **History**. Publisher runs should be **200** every 15 min.
 - After the first Tuesday: in Supabase, a new `social_posts` row should go `scheduled` → `published`, with both `fb_post_id` and `ig_post_id` set.
+
+### 8f. Job 3: Health monitor (daily)
+
+Jobs 1 and 2 alert only when their *own* request fails. Most real outages don't look like that: the publisher returns 200 even when Meta rejects a post, and a paused Supabase just makes the site fall back to its backup data. `GET /api/cron/health` checks the whole chain and returns **503** (so cron-job.org emails you) if any of these are true:
+
+| Check | Means |
+|---|---|
+| Supabase query fails | Database paused or down. **Booking site is also broken.** → Resume project |
+| A post has `status = failed` in the last 7 days | Meta rejected it. The `error` text is in the response |
+| A post is still `scheduled`/`publishing` more than 60 min past its time | Publisher job (Job 1) isn't running |
+| Nothing published in more than 5 days | Generator (Job 2) or the whole chain stopped |
+| Meta token invalid, or expires within 14 days | Replace it (§4c) before posting stops |
+
+**Setup.** Create it like Job 1, with the same GET method, `Authorization: Bearer <CRON_SECRET>` header and timezone:
+- Title: `Capellán – Health`
+- URL: `https://capellanservicio.com/api/cron/health`
+- Schedule: **Custom**, every day, hour **20**, minute **0** (after the 7 PM slot has had time to publish)
+- Notify: on **failure** and **when disabled**. If it offers a failure-count threshold, set it to **1**: this job runs only once a day.
+
+**Test run is safe** (it only reads). A healthy response looks like:
+```json
+{ "ok": true, "problems": [], "last_published_at": "...", "token_expires_at": "never/unknown" }
+```
+`token_expires_at: "never/unknown"` is what a System User token shows. A date there means you're on a 60-day token. Replace it now, not when the alert fires.
+
+> **When you first set it up**, it will report "Nada publicado en más de 5 días" until the first post goes out. That's expected. To avoid the extra alerts, create this job after the first successful publish.
+
+**When an alert arrives:** open the URL with the header (or use Test run on the job) and read `problems`. Each entry says what broke.
 
 **Notes:**
 
